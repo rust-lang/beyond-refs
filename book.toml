@@ -12,3 +12,7 @@ site-url="/beyond-refs/"
 [output.html.fold]
 enable = true
 level = 0
+
+[output.linkcheck]
+# This might be too annoying.
+warning-policy = "error"
