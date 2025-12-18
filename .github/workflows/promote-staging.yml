@@ -1,0 +1,24 @@
+name: Promote Staging to Main
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+jobs:
+  verify-build:
+    uses: ./.github/workflows/mdbook.yml
+  merge-and-push:
+    needs: verify-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Merge staging -> main
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: staging
+          target_branch: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
