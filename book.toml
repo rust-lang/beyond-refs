@@ -2,3 +2,13 @@
 title = "Beyond Rust References"
 authors = ["The Rust Project and Contributors"]
 language = "en"
+
+[output.html]
+no-section-label=true
+git-repository-url="https://github.com/rust-lang/beyond-refs"
+edit-url-template="https://github.com/rust-lang/beyond-refs/edit/main/{path}"
+site-url="/beyond-refs/"
+
+[output.html.fold]
+enable = true
+level = 0
