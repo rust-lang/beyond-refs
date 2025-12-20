@@ -10,6 +10,13 @@ TODO: Cover the range of use cases like
 * Constructor functions
 * Fallible
 
+## Approaches
+
+* [Init expressions](./init_exprs.md)
+* [Out pointers](./out_pointers.md)
+* [Placing](./placing.md)
+* [Guaranteed value emplacement](./guaranteed_emplacement.md)
+
 ## Potential design axioms
 
 TODO: Add more or remove.
