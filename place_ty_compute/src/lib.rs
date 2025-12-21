@@ -452,4 +452,7 @@ macro_rules! place_expr {
     ($p:tt [$i:expr]) => {
         Box::new($crate::PlaceExpr::Index($crate::place_expr!($p), $crate::Expr(stringify!($i).to_string())))
     };
+    (@% $wrapper:ident $($p:tt)+) => {
+        Box::new($crate::PlaceExpr::Wrap($crate::place_expr!($($p)+)), $wrapper.clone())
+    };
 }
