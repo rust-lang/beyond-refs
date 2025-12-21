@@ -13,23 +13,32 @@ fn check(place: &mut PlaceExpr, desugaring: &str, expected_ty: &str) {
     }
     match ty {
         Ok(ty) => {
-            println!("desugared to: `{place}: {ty}`");
-            assert_eq!(
-                format!("{place}"),
-                desugaring,
-                "computed desugaring does not match the expected desugaring"
-            );
-            assert_eq!(
-                format!("{ty}"),
-                expected_ty,
-                "computed type does not match the expected type"
-            );
+            let mut err = false;
+            if format!("{place}") != desugaring {
+                err = true;
+                println!();
+                println!("computed desugaring does not match the expected desugaring:");
+                println!("expected: {desugaring}");
+                println!("computed: {place}");
+            }
+            if format!("{ty}") != expected_ty {
+                err = true;
+                println!();
+                println!("computed type does not match the expected type:");
+                println!("expected: {expected_ty}");
+                println!("computed: {ty}");
+            }
+            if err {
+                panic!("desugaring or type does not match expected value");
+            } else {
+                println!("desugared to: `{place}: {ty}`");
+            }
         }
         Err(err) => {
             println!();
             println!("error while desugaring: {err}");
             println!("partial desugaring: {place}");
-            panic!();
+            panic!("an explicit error occurred during desugaring");
         }
     }
 }
