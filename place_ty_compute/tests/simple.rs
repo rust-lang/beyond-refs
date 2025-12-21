@@ -1,11 +1,29 @@
 use std::{
     collections::{BTreeMap, HashMap},
-    sync::Mutex,
+    sync::{Mutex, Once},
 };
 
 use place_ty_compute::{Field, Local, PlaceExpr, Type, place_expr};
 
+fn init_logging() {
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        tracing_subscriber::registry()
+            .with(
+                tracing_tree::HierarchicalLayer::new(2)
+                    .with_indent_lines(true)
+                    .with_ansi(true)
+                    .with_writer(tracing_subscriber::fmt::TestWriter::new()),
+            )
+            .init();
+    });
+}
+
 fn check(place: &mut PlaceExpr, desugaring: &str, expected_ty: &str) {
+    init_logging();
     let undesugared = format!("{place}");
     let ty = place.compute_ty();
     println!("analzed the place expression `{undesugared}` with:");
