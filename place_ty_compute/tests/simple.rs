@@ -185,3 +185,18 @@ fn multi_field_auto_deref() {
     let mut e = place_expr!(*p.x.y.z);
     check(&mut e, "*(*(*(*p).x).y).z", "Z");
 }
+
+#[test]
+fn multi_wrapper() {
+    let z = Type::new_generic("Z");
+    let y = Type::new_struct("Y", [Field::new("z", maybe_uninit(&z))]);
+    let x = Type::new_struct("X", [Field::new("y", maybe_uninit(&y))]);
+    let e = Type::new_struct("E", [Field::new("x", maybe_uninit(&x))]);
+    let p = Local::new(shared_ref(&e), "p");
+    let mut e = place_expr!(p.x.y.z);
+    check(
+        &mut e,
+        "@%MaybeUninit @%MaybeUninit @%MaybeUninit *(*(*(*p).x).y).z",
+        "MaybeUninit<MaybeUninit<MaybeUninit<Z>>>",
+    );
+}
