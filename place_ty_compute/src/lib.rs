@@ -7,6 +7,8 @@ use std::{
     sync::Arc,
 };
 
+use tracing::{debug, field::debug, info, info_span, trace};
+
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Ident(String);
 
@@ -360,44 +362,64 @@ impl PlaceExpr {
     }
 
     pub fn compute_ty(&mut self) -> Result<Type, Error> {
+        let _compute_span = info_span!("computing type of", place = %self).entered();
         match self {
-            Self::LocalVar(local) => Ok(local.ty()),
+            Self::LocalVar(local) => {
+                info!("found local `{local}: {}`", local.ty());
+                Ok(local.ty())
+            }
             Self::Deref(p) => {
+                debug!("found deref, recursing");
                 let p_ty = p.compute_ty()?;
+                trace!("got `{p_ty}`, trying to deref");
                 p_ty.get_has_place_target()
                     .ok_or(Error::new(p, "should implement `HasPlace`"))
             }
             Self::Index(..) | Self::FieldAccess(..) => {
                 let (p, field) = match self {
-                    Self::Index(p, _) => (p, None),
-                    Self::FieldAccess(p, field) => (p, Some(field)),
+                    Self::Index(p, _) => {
+                        debug!("found index operation");
+                        (p, None)
+                    }
+                    Self::FieldAccess(p, field) => {
+                        debug!("found field access");
+                        (p, Some(field))
+                    }
                     _ => unreachable!(),
                 };
                 let p = &mut **p;
                 let mut wrappers: Vec<Type> = vec![];
                 loop {
                     let p_ty = p.compute_ty()?;
+                    let access_span =
+                        info_span!("trying to access field/index into", ty = %p_ty).entered();
                     if let Some(mut ty) = match field {
                         None => p_ty.get_array_or_slice_element(),
                         Some(ref field) => p_ty.get_field(field).map(|f| f.ty()),
                     } {
-                        let mut wrap = true;
+                        info!(
+                            "got type of slice/array element or field: `{ty}`, wrapping in reverse"
+                        );
                         for wrapper in wrappers.into_iter().rev() {
-                            if wrap {
-                                match wrapper.wrap_type(ty.clone()) {
-                                    Some(new_ty) => {
-                                        ty = new_ty;
-                                        self.wrap_in_place(wrapper);
-                                    }
-                                    None => wrap = false,
+                            match wrapper.wrap_type(ty.clone()) {
+                                Some(new_ty) => {
+                                    trace!("wrapping with `{wrapper}`");
+                                    ty = new_ty;
+                                    self.wrap_in_place(wrapper);
+                                }
+                                None => {
+                                    trace!("found non-wrapper type: `{wrapper}`");
+                                    break;
                                 }
                             }
                         }
                         return Ok(ty);
                     }
+                    access_span.exit();
                     if p_ty.get_has_place_target().is_none() {
                         return Err(Error::new(p, "should implement `HasPlace`"));
                     }
+                    info!("derefing in hope of accessing field/index");
                     wrappers.push(p_ty);
                     p.deref_in_place();
                 }
