@@ -6,8 +6,9 @@ use std::{
 use place_ty_compute::{Field, Local, PlaceExpr, Type, place_expr};
 
 fn check(place: &mut PlaceExpr, desugaring: &str, expected_ty: &str) {
-    println!("analyzing the place expression `{place}` with:");
+    let undesugared = format!("{place}");
     let ty = place.compute_ty();
+    println!("analzed the place expression `{undesugared}` with:");
     for ctx in place.context() {
         println!("\t{ctx}")
     }
