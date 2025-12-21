@@ -367,40 +367,20 @@ impl PlaceExpr {
                 p_ty.get_has_place_target()
                     .ok_or(Error::new(p, "should implement `HasPlace`"))
             }
-            Self::Index(p, _) => {
+            Self::Index(..) | Self::FieldAccess(..) => {
+                let (p, field) = match self {
+                    Self::Index(p, _) => (p, None),
+                    Self::FieldAccess(p, field) => (p, Some(field)),
+                    _ => unreachable!(),
+                };
                 let p = &mut **p;
                 let mut wrappers: Vec<Type> = vec![];
                 loop {
                     let p_ty = p.compute_ty()?;
-                    if let Some(mut ty) = p_ty.get_array_or_slice_element() {
-                        let mut wrap = true;
-                        for wrapper in wrappers.into_iter().rev() {
-                            if wrap {
-                                match wrapper.wrap_type(ty.clone()) {
-                                    Some(new_ty) => {
-                                        ty = new_ty;
-                                        self.wrap_in_place(wrapper);
-                                    }
-                                    None => wrap = false,
-                                }
-                            }
-                        }
-                        return Ok(ty);
-                    }
-                    if p_ty.get_has_place_target().is_none() {
-                        return Err(Error::new(p, "should implement `HasPlace`"));
-                    }
-                    wrappers.push(p_ty);
-                    p.deref_in_place();
-                }
-            }
-            Self::FieldAccess(p, field) => {
-                let p = &mut **p;
-                let mut wrappers: Vec<Type> = vec![];
-                loop {
-                    let p_ty = p.compute_ty()?;
-                    if let Some(field) = p_ty.get_field(field) {
-                        let mut ty = field.ty();
+                    if let Some(mut ty) = match field {
+                        None => p_ty.get_array_or_slice_element(),
+                        Some(ref field) => p_ty.get_field(field).map(|f| f.ty()),
+                    } {
                         let mut wrap = true;
                         for wrapper in wrappers.into_iter().rev() {
                             if wrap {
