@@ -25,7 +25,7 @@ Example:
 #[derive(Reborrow)]
 struct CustomMut<'a, T>(*mut T, PhantomData<&'a mut ()>);
 
-fn f(a: CustomMut<u32>) {
+fn f(a: CustomMut<'_, u32>) {
     inner(a);
     inner(a);
 }
