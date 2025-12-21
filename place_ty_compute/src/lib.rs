@@ -248,7 +248,7 @@ pub enum PlaceExpr {
     Index(Box<PlaceExpr>, Expr),
     /// Local variable `v`.
     LocalVar(Local),
-    /// Wrapping a place, `€Wrapper p`
+    /// Wrapping a place, `@%Wrapper p`
     Wrap(Box<PlaceExpr>, Type),
 }
 
@@ -277,7 +277,7 @@ impl Display for PlaceExpr {
                 }
             },
             PlaceExpr::LocalVar(var) => write!(f, "{var}"),
-            PlaceExpr::Wrap(p, ty) => write!(f, "€{} {p}", ty.wrapper_name().unwrap()),
+            PlaceExpr::Wrap(p, ty) => write!(f, "@%{} {p}", ty.wrapper_name().unwrap()),
         }
     }
 }
