@@ -5,7 +5,7 @@ use std::{
 
 use place_ty_compute::{Field, Local, PlaceExpr, Type, place_expr};
 
-fn check(place: &mut PlaceExpr) {
+fn check(place: &mut PlaceExpr, desugaring: &str, expected_ty: &str) {
     println!("analyzing the place expression `{place}` with:");
     let ty = place.compute_ty();
     for ctx in place.context() {
@@ -14,6 +14,16 @@ fn check(place: &mut PlaceExpr) {
     match ty {
         Ok(ty) => {
             println!("desugared to: `{place}: {ty}`");
+            assert_eq!(
+                format!("{place}"),
+                desugaring,
+                "computed desugaring does not match the expected desugaring"
+            );
+            assert_eq!(
+                format!("{ty}"),
+                expected_ty,
+                "computed type does not match the expected type"
+            );
         }
         Err(err) => {
             println!();
@@ -22,25 +32,6 @@ fn check(place: &mut PlaceExpr) {
             panic!();
         }
     }
-}
-
-#[test]
-fn deref() {
-    let t = Type::new_generic("T");
-    let t_ref = Type::new_with_target("&T", t.clone());
-    let p = Local::new(t_ref, "p");
-    let mut e = place_expr!(*p);
-    check(&mut e);
-}
-
-#[test]
-fn shared_ref_field() {
-    let u = Type::new_generic("U");
-    let t = Type::new_struct("T", vec![Field::new("field", u.clone())]);
-    let t_ref = Type::new_with_target("&T", t.clone());
-    let p = Local::new(t_ref, "p");
-    let mut e = place_expr!(p.field);
-    check(&mut e);
 }
 
 fn maybe_uninit(inner: &Type) -> Type {
@@ -102,13 +93,32 @@ fn slice(target: &Type) -> Type {
 }
 
 #[test]
+fn deref() {
+    let t = Type::new_generic("T");
+    let t_ref = Type::new_with_target("&T", t.clone());
+    let p = Local::new(t_ref, "p");
+    let mut e = place_expr!(*p);
+    check(&mut e, "*p", "T");
+}
+
+#[test]
+fn shared_ref_field() {
+    let u = Type::new_generic("U");
+    let t = Type::new_struct("T", vec![Field::new("field", u.clone())]);
+    let t_ref = shared_ref(&t);
+    let p = Local::new(t_ref, "p");
+    let mut e = place_expr!(p.field);
+    check(&mut e, "(*p).field", "U");
+}
+
+#[test]
 fn blog1() {
     let field = Type::new_generic("Field");
     let struct_ = Type::new_struct("Struct", vec![Field::new("field", field.clone())]);
     let mb_struct = maybe_uninit(&struct_);
     let p = Local::new(mb_struct, "p");
     let mut e = place_expr!(p.field);
-    check(&mut e);
+    check(&mut e, "@%MaybeUninit (*p).field", "MaybeUninit<Field>");
 }
 
 #[test]
@@ -119,7 +129,11 @@ fn blog2() {
     let mb_mb_struct = maybe_uninit(&mb_struct);
     let p = Local::new(mb_mb_struct, "p");
     let mut e = place_expr!(p.field);
-    check(&mut e);
+    check(
+        &mut e,
+        "@%MaybeUninit @%MaybeUninit (**p).field",
+        "MaybeUninit<MaybeUninit<Field>>",
+    );
 }
 
 #[test]
@@ -130,7 +144,7 @@ fn blog3() {
     let ty = shared_ref(&shared_ref(&shared_ref(&mb_struct)));
     let p = Local::new(ty, "p");
     let mut e = place_expr!(p.field);
-    check(&mut e);
+    check(&mut e, "@%MaybeUninit (****p).field", "MaybeUninit<Field>");
 }
 
 #[test]
@@ -140,7 +154,7 @@ fn blog4() {
     let ty = maybe_uninit(&shared_ref(&struct_));
     let p = Local::new(ty, "p");
     let mut e = place_expr!(p.field);
-    check(&mut e);
+    check(&mut e, "(**p).field", "Field");
 }
 
 #[test]
@@ -149,7 +163,7 @@ fn blog5() {
     let ty = maybe_uninit(&slice(&u8));
     let p = Local::new(ty, "p");
     let mut e = place_expr!(p[42]);
-    check(&mut e);
+    check(&mut e, "@%MaybeUninit (*p)[42]", "MaybeUninit<u8>");
 }
 
 #[test]
@@ -160,5 +174,5 @@ fn multi_field_auto_deref() {
     let e = Type::new_struct("E", [Field::new("x", shared_ref(&x))]);
     let p = Local::new(shared_ref(&e), "p");
     let mut e = place_expr!(*p.x.y.z);
-    check(&mut e);
+    check(&mut e, "*(*(*(*p).x).y).z", "Z");
 }
