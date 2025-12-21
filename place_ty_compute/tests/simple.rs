@@ -151,3 +151,14 @@ fn blog5() {
     let mut e = place_expr!(p[42]);
     check(&mut e);
 }
+
+#[test]
+fn multi_field_auto_deref() {
+    let z = Type::new_generic("Z");
+    let y = Type::new_struct("Y", [Field::new("z", shared_ref(&z))]);
+    let x = Type::new_struct("X", [Field::new("y", shared_ref(&y))]);
+    let e = Type::new_struct("E", [Field::new("x", shared_ref(&x))]);
+    let p = Local::new(shared_ref(&e), "p");
+    let mut e = place_expr!(*p.x.y.z);
+    check(&mut e);
+}

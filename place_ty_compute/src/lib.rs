@@ -431,14 +431,23 @@ impl PlaceExpr {
 
 #[macro_export]
 macro_rules! place_expr {
+    (($($rest:tt)*)) => {
+        $crate::place_expr!($($rest)*)
+    };
     (*$($rest:tt)*) => {
         Box::new($crate::PlaceExpr::Deref($crate::place_expr!($($rest)*)))
     };
     ($p:ident) => {
         Box::new($crate::PlaceExpr::LocalVar($p.clone()))
     };
+    ($p:tt . $field:ident $($rest:tt)+) => {
+        $crate::place_expr!(($p . $field) $($rest)+)
+    };
     ($p:tt . $field:ident) => {
         Box::new($crate::PlaceExpr::FieldAccess($crate::place_expr!($p), stringify!($field).to_string()))
+    };
+    ($p:tt [$i:expr] $($rest:tt)+) => {
+        $crate::place_expr!(($p [$i]) $($rest)+)
     };
     ($p:tt [$i:expr]) => {
         Box::new($crate::PlaceExpr::Index($crate::place_expr!($p), $crate::Expr(stringify!($i).to_string())))
