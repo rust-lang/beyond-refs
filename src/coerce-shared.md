@@ -22,4 +22,4 @@ method. The current work in the Reborrow traits lang experiment is based on a
 marker trait.
 
 - [Marker trait approach](./coerce-shared-marker-trait.md)
-- [Method-based approach](./coerce-shared-method.md)
+- [Method-based approach](./coerce-shared-methods.md)
