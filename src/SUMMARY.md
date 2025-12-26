@@ -12,7 +12,7 @@
     - [Method-based approach](./reborrow-method.md)
   - [CoerceShared](./coerce-shared.md)
     - [Marker trait approach](./coerce-shared-marker-trait.md)
-    - [Method-based approach](./coerce-shared-method.md)
+    - [Method-based approach](./coerce-shared-methods.md)
   - [Receiver](./receiver.md)
   - [Autoref](./autoref.md)
 - [In-place initialization](./in_place_init.md)
