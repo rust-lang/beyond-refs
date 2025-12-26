@@ -41,7 +41,7 @@ The current work in the Reborrow traits lang experiment is based on a marker
 trait.
 
 - [Marker trait approach](./reborrow-marker-trait.md)
-- [Method-based approach](./reborrow-method.md)
+- [Method-based approach](./reborrow-methods.md)
 
 ## [CoerceShared](./coerce-shared.md)
 
