@@ -1,5 +1,7 @@
 # Method-based approach
 
+{{#include ../../old.md}}
+
 Today, coercing exclusive references to shared references can be implemented in
 user-land using a method-based approach:
 

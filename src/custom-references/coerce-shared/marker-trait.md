@@ -1,5 +1,7 @@
 # Marker trait approach
 
+{{#include ../../cur.md}}
+
 Coercing a custom user-defined exclusive reference into a user-defined shared
 reference is a slightly involved affair: the two types are obviously going to be
 different types, just like `&mut T` and `&T` are different, but they must also

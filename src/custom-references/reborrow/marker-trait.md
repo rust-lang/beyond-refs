@@ -1,5 +1,7 @@
 # Marker trait approach
 
+{{#include ../../cur.md}}
+
 The current Reborrow traits lang experiment aims to produce a method-less
 Reborrow trait. For exclusive reference semantics this is mostly trivial: the
 concrete code generated for an exclusive reborrow is equivalent to that of
