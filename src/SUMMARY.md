@@ -1,8 +1,8 @@
 # Summary
 
 - [Custom references](./custom-refs.md)
-  - [HasPlace proposal](./has_place.md)
-  - [Field projections](./field_projections.md)
+  - [HasPlace proposal](./has-place.md)
+  - [Field projections](./field-projections.md)
   - [Reborrow](./reborrow/index.md)
     - [User-defined exclusive references](./reborrow/custom-mut.md)
     - [Wrapper types](./reborrow/wrapper-types.md)
@@ -16,7 +16,7 @@
   - [Receiver](./receiver.md)
   - [Autoref](./autoref.md)
 - [In-place initialization](./in-place-init.md)
-  - [Init expressions](./init_exprs.md)
-  - [Out pointers](./out_pointers.md)
+  - [Init expressions](./init-exprs.md)
+  - [Out pointers](./out-pointers.md)
   - [Placing](./placing.md)
-  - [Guaranteed value emplacement](./guaranteed_emplacement.md)
+  - [Guaranteed value emplacement](./guaranteed-emplacement.md)

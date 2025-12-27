@@ -12,10 +12,10 @@ TODO: Cover the range of use cases like
 
 ## Approaches
 
-* [Init expressions](./init_exprs.md)
-* [Out pointers](./out_pointers.md)
+* [Init expressions](./init-exprs.md)
+* [Out pointers](./out-pointers.md)
 * [Placing](./placing.md)
-* [Guaranteed value emplacement](./guaranteed_emplacement.md)
+* [Guaranteed value emplacement](./guaranteed-emplacement.md)
 
 ## Potential design axioms
 

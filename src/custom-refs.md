@@ -3,7 +3,7 @@
 Custom references refers to a bundle of features that allow user-defined types to emulate and extend the capabilities of Rust references:
 
 * [Reborrowing](./reborrow/index.md)
-* [Projection](./field_projections.md)
+* [Projection](./field-projections.md)
 * [Autoref](./autoref.md)
 * [Arbitrary self types](./receiver.md)
 
