@@ -1,6 +1,6 @@
 # Receiver
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 The Receiver trait enables "arbitrary self types" by doing two things:
 

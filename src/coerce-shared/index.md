@@ -1,6 +1,6 @@
 # CoerceShared
 
-{{#include ../../stub.md}}
+{{#include ../stub.md}}
 
 If exclusive references exist, then shared references are nearly always
 necessary as well. Rust's own exclusive `&mut T` references automatically coerce

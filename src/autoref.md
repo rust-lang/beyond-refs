@@ -1,6 +1,6 @@
 # Autoref
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 ## Resources
 

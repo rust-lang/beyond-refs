@@ -1,6 +1,6 @@
 # HasPlace proposal
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 ## Resources
 

@@ -1,6 +1,6 @@
 # Field projections
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 ## Resources
 

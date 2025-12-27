@@ -1,6 +1,6 @@
 # Marker trait approach
 
-{{#include ../../cur.md}}
+{{#include ../cur.md}}
 
 Coercing a custom user-defined exclusive reference into a user-defined shared
 reference is a slightly involved affair: the two types are obviously going to be

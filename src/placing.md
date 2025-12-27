@@ -1,6 +1,6 @@
 # Placing functions
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 ## Resources
 

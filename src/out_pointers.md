@@ -1,6 +1,6 @@
 # Out pointers
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 ## Resources
 

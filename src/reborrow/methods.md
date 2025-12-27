@@ -1,6 +1,6 @@
 # Method-based approach
 
-{{#include ../../old.md}}
+{{#include ../old.md}}
 
 Today, exclusive references can be implemented in user-land using a method-based
 approach:

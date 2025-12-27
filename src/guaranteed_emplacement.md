@@ -1,6 +1,6 @@
 # Guaranteed value emplacement
 
-{{#include ../stub.md}}
+{{#include stub.md}}
 
 ## Resources
 
