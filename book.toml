@@ -3,6 +3,9 @@ title = "Beyond Rust References"
 authors = ["The Rust Project and Contributors"]
 language = "en"
 
+[build]
+create-missing = false
+
 [output.html]
 no-section-label=true
 git-repository-url="https://github.com/rust-lang/beyond-refs"
