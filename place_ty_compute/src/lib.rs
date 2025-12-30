@@ -376,18 +376,9 @@ impl PlaceExpr {
         }
     }
 
-    pub fn compute_ty(&mut self) -> Result<Type, Error> {
-        use std::collections::BTreeMap;
-        use std::sync::Mutex;
-        static CACHE: Mutex<BTreeMap<PlaceExpr, Type>> = Mutex::new(BTreeMap::new());
-        let cache = CACHE.lock().unwrap();
-
-        if let Some(res) = cache.get(self) {
-            return Ok(res.clone());
-        }
-        drop(cache);
+    pub fn compute_ty(&mut self, wrappers: Option<&mut Vec<Type>>) -> Result<Type, Error> {
         let span = info_span!("computing type of", place = %self).entered();
-        let res = span.in_scope(|| match self {
+        span.in_scope(|| match self {
             Self::LocalVar(local) => {
                 debug!("found local variable");
                 info!("resolved `{local}: {}`", local.ty());
@@ -395,7 +386,7 @@ impl PlaceExpr {
             }
             Self::Deref(p) => {
                 debug!("found deref, descending");
-                let p_ty = p.compute_ty()?;
+                let p_ty = p.compute_ty(wrappers)?;
                 debug!("expecting `{p_ty}: HasPlace`");
                 if let Some(target) = p_ty.get_has_place_target() {
                     info!("resolved `{self}: {target}`");
@@ -412,24 +403,30 @@ impl PlaceExpr {
                     _ => unreachable!(),
                 };
                 let p = &mut **p;
-                let mut wrappers: Vec<Type> = vec![];
+                let wrap = wrappers.is_none();
+                let mut wrappers: &mut Vec<Type> = match wrappers {
+                    Some(wrappers) => wrappers,
+                    None => &mut vec![],
+                };
                 loop {
-                    let p_ty = p.compute_ty()?;
+                    let p_ty = p.compute_ty(Some(&mut wrappers))?;
                     if let Some(mut ty) = match field {
                         None => p_ty.get_array_or_slice_element(),
                         Some(ref field) => p_ty.get_field(field).map(|f| f.ty()),
                     } {
                         debug!("field/index found on `{p_ty}` with type `{ty}`");
-                        for wrapper in wrappers.into_iter().rev() {
-                            match wrapper.wrap_type(ty.clone()) {
-                                Some(new_ty) => {
-                                    debug!("wrapping with `{wrapper}`, result: `{new_ty}`");
-                                    ty = new_ty;
-                                    self.wrap_in_place(wrapper);
-                                }
-                                None => {
-                                    debug!("cannot wrap with `{wrapper}`");
-                                    break;
+                        if wrap {
+                            for wrapper in wrappers.drain(..).rev() {
+                                match wrapper.wrap_type(ty.clone()) {
+                                    Some(new_ty) => {
+                                        debug!("wrapping with `{wrapper}`, result: `{new_ty}`");
+                                        ty = new_ty;
+                                        self.wrap_in_place(wrapper);
+                                    }
+                                    None => {
+                                        debug!("cannot wrap with `{wrapper}`");
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -448,13 +445,9 @@ impl PlaceExpr {
                 }
             }
             Self::Wrap(p, wrapper) => wrapper
-                .wrap_type(p.compute_ty()?)
+                .wrap_type(p.compute_ty(wrappers)?)
                 .ok_or(Error::new(p, "should implement `PlaceWrapper`")),
-        });
-        if let Ok(ty) = &res {
-            CACHE.lock().unwrap().insert(self.clone(), ty.clone());
-        }
-        res
+        })
     }
 }
 
@@ -482,6 +475,6 @@ macro_rules! place_expr {
         Box::new($crate::PlaceExpr::Index($crate::place_expr!($p), $crate::Expr(stringify!($i).to_string())))
     };
     (@% $wrapper:ident $($p:tt)+) => {
-        Box::new($crate::PlaceExpr::Wrap($crate::place_expr!($($p)+)), $wrapper.clone())
+        Box::new($crate::PlaceExpr::Wrap($crate::place_expr!($($p)+), $wrapper.clone()))
     };
 }

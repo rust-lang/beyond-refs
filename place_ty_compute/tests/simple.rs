@@ -25,7 +25,7 @@ fn init_logging() {
 fn check(place: &mut PlaceExpr, desugaring: &str, expected_ty: &str) {
     init_logging();
     let undesugared = format!("{place}");
-    let ty = place.compute_ty();
+    let ty = place.compute_ty(None);
     println!("analzed the place expression `{undesugared}` with:");
     for ctx in place.context() {
         println!("\t{ctx}")
@@ -213,6 +213,24 @@ fn multi_wrapper() {
     let e = Type::new_struct("E", [Field::new("x", maybe_uninit(&x))]);
     let p = Local::new(shared_ref(&e), "p");
     let mut e = place_expr!(p.x.y.z);
+    check(
+        &mut e,
+        "@%MaybeUninit @%MaybeUninit (*(*(*p).x).y).z",
+        "MaybeUninit<MaybeUninit<MaybeUninit<Z>>>",
+    );
+}
+
+#[test]
+fn multi_wrapper2() {
+    let z = Type::new_generic("Z");
+    let mbz = maybe_uninit(&z);
+    let mb2z = maybe_uninit(&mbz);
+    let mb3z = maybe_uninit(&mb2z);
+    let y = Type::new_struct("Y", [Field::new("z", mbz.clone())]);
+    let x = Type::new_struct("X", [Field::new("y", maybe_uninit(&y))]);
+    let e = Type::new_struct("E", [Field::new("x", maybe_uninit(&x))]);
+    let p = Local::new(shared_ref(&e), "p");
+    let mut e = place_expr!(@%mb3z @%mb2z @%mbz *(*(*(*p).x).y).z);
     check(
         &mut e,
         "@%MaybeUninit @%MaybeUninit @%MaybeUninit *(*(*(*p).x).y).z",
