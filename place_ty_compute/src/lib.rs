@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
 };
 
-use tracing::{debug, field::debug, info, info_span, trace};
+use tracing::{debug, info, info_span};
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Ident(String);
@@ -24,7 +24,7 @@ impl Display for Ident {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct Expr(pub String);
 
 impl Display for Expr {
@@ -184,9 +184,24 @@ impl PartialEq for Local {
         Arc::ptr_eq(&self.0, &other.0)
     }
 }
+
 impl Hash for Local {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         (&raw const *self.0).addr().hash(state)
+    }
+}
+
+impl PartialOrd for Local {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Local {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        ptr::from_ref(self.0.as_ref())
+            .addr()
+            .cmp(&ptr::from_ref(other.0.as_ref()).addr())
     }
 }
 
@@ -240,7 +255,7 @@ impl Error {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Ord, PartialOrd, PartialEq, Eq)]
 pub enum PlaceExpr {
     /// Derefing a place `*p`.
     Deref(Box<PlaceExpr>),
@@ -362,64 +377,72 @@ impl PlaceExpr {
     }
 
     pub fn compute_ty(&mut self) -> Result<Type, Error> {
-        let _compute_span = info_span!("computing type of", place = %self).entered();
-        match self {
+        use std::collections::BTreeMap;
+        use std::sync::Mutex;
+        static CACHE: Mutex<BTreeMap<PlaceExpr, Type>> = Mutex::new(BTreeMap::new());
+        let cache = CACHE.lock().unwrap();
+
+        if let Some(res) = cache.get(self) {
+            return Ok(res.clone());
+        }
+        drop(cache);
+        let span = info_span!("computing type of", place = %self).entered();
+        let res = span.in_scope(|| match self {
             Self::LocalVar(local) => {
-                info!("found local `{local}: {}`", local.ty());
+                debug!("found local variable");
+                info!("resolved `{local}: {}`", local.ty());
                 Ok(local.ty())
             }
             Self::Deref(p) => {
-                debug!("found deref, recursing");
+                debug!("found deref, descending");
                 let p_ty = p.compute_ty()?;
-                trace!("got `{p_ty}`, trying to deref");
-                p_ty.get_has_place_target()
-                    .ok_or(Error::new(p, "should implement `HasPlace`"))
+                debug!("expecting `{p_ty}: HasPlace`");
+                if let Some(target) = p_ty.get_has_place_target() {
+                    info!("resolved `{self}: {target}`");
+                    Ok(target)
+                } else {
+                    Err(Error::new(p, "should implement `HasPlace`"))
+                }
             }
             Self::Index(..) | Self::FieldAccess(..) => {
+                debug!("found field/index access");
                 let (p, field) = match self {
-                    Self::Index(p, _) => {
-                        debug!("found index operation");
-                        (p, None)
-                    }
-                    Self::FieldAccess(p, field) => {
-                        debug!("found field access");
-                        (p, Some(field))
-                    }
+                    Self::Index(p, _) => (p, None),
+                    Self::FieldAccess(p, field) => (p, Some(field)),
                     _ => unreachable!(),
                 };
                 let p = &mut **p;
                 let mut wrappers: Vec<Type> = vec![];
                 loop {
                     let p_ty = p.compute_ty()?;
-                    let access_span =
-                        info_span!("trying to access field/index into", ty = %p_ty).entered();
                     if let Some(mut ty) = match field {
                         None => p_ty.get_array_or_slice_element(),
                         Some(ref field) => p_ty.get_field(field).map(|f| f.ty()),
                     } {
-                        info!(
-                            "got type of slice/array element or field: `{ty}`, wrapping in reverse"
-                        );
+                        debug!("field/index found on `{p_ty}` with type `{ty}`");
                         for wrapper in wrappers.into_iter().rev() {
                             match wrapper.wrap_type(ty.clone()) {
                                 Some(new_ty) => {
-                                    trace!("wrapping with `{wrapper}`");
+                                    debug!("wrapping with `{wrapper}`, result: `{new_ty}`");
                                     ty = new_ty;
                                     self.wrap_in_place(wrapper);
                                 }
                                 None => {
-                                    trace!("found non-wrapper type: `{wrapper}`");
+                                    debug!("cannot wrap with `{wrapper}`");
                                     break;
                                 }
                             }
                         }
+                        info!("resolved `{self}: {ty}`");
                         return Ok(ty);
                     }
-                    access_span.exit();
                     if p_ty.get_has_place_target().is_none() {
+                        debug!(
+                            "no field/index found on `{p_ty}`, which also doesn't impl `HasPlace`"
+                        );
                         return Err(Error::new(p, "should implement `HasPlace`"));
                     }
-                    info!("derefing in hope of accessing field/index");
+                    debug!("no field/index found on `{p_ty}`, adding a deref to `{p}`");
                     wrappers.push(p_ty);
                     p.deref_in_place();
                 }
@@ -427,7 +450,11 @@ impl PlaceExpr {
             Self::Wrap(p, wrapper) => wrapper
                 .wrap_type(p.compute_ty()?)
                 .ok_or(Error::new(p, "should implement `PlaceWrapper`")),
+        });
+        if let Ok(ty) = &res {
+            CACHE.lock().unwrap().insert(self.clone(), ty.clone());
         }
+        res
     }
 }
 

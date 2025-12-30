@@ -13,7 +13,7 @@ fn init_logging() {
     ONCE.call_once(|| {
         tracing_subscriber::registry()
             .with(
-                tracing_tree::HierarchicalLayer::new(2)
+                tracing_tree::HierarchicalLayer::new(4)
                     .with_indent_lines(true)
                     .with_ansi(true)
                     .with_writer(tracing_subscriber::fmt::TestWriter::new()),
