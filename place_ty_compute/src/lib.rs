@@ -1,10 +1,11 @@
 use std::{
     borrow::Borrow,
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fmt::{self, Display},
     hash::Hash,
+    hint::unreachable_unchecked,
     ptr,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use tracing::{debug, info, info_span};
@@ -363,6 +364,22 @@ impl PlaceExpr {
         unsafe { this.write(val) };
     }
 
+    fn strip_wrap_then_deref(&mut self) {
+        assert!(matches!(self, Self::Deref(p) if matches!(**p, Self::Wrap(..))));
+        let this: *mut Self = self;
+        // SAFETY: `this` comes from a mutable reference and we write a value back later without
+        // panicking.
+        let val = unsafe { this.read() };
+        let Self::Deref(p) = val else {
+            unsafe { unreachable_unchecked() }
+        };
+        let Self::Wrap(p, wrapper) = *p else {
+            unsafe { unreachable_unchecked() }
+        };
+        unsafe { this.write(*p) };
+        drop(wrapper);
+    }
+
     /// Queries this place expressions' type without modifying it.
     ///
     /// After running [`Self::compute_ty`], this function returns `Some`.
@@ -376,9 +393,15 @@ impl PlaceExpr {
         }
     }
 
-    pub fn compute_ty(&mut self, wrappers: Option<&mut Vec<Type>>) -> Result<Type, Error> {
+    pub fn compute_ty(&mut self) -> Result<Type, Error> {
+        static CACHE: Mutex<BTreeMap<PlaceExpr, Type>> = Mutex::new(BTreeMap::new());
+        let cache = CACHE.lock().unwrap();
+        if let Some(ty) = cache.get(self) {
+            return Ok(ty.clone());
+        }
+        drop(cache);
         let span = info_span!("computing type of", place = %self).entered();
-        span.in_scope(|| match self {
+        let res = span.in_scope(|| match self {
             Self::LocalVar(local) => {
                 debug!("found local variable");
                 info!("resolved `{local}: {}`", local.ty());
@@ -386,9 +409,14 @@ impl PlaceExpr {
             }
             Self::Deref(p) => {
                 debug!("found deref, descending");
-                let p_ty = p.compute_ty(wrappers)?;
+                let p_ty = p.compute_ty()?;
                 debug!("expecting `{p_ty}: HasPlace`");
                 if let Some(target) = p_ty.get_has_place_target() {
+                    if let Self::Wrap(..) = &**p {
+                        self.strip_wrap_then_deref();
+                        let ty = self.compute_ty()?;
+                        assert!(ty == target, "{ty} != {target}");
+                    }
                     info!("resolved `{self}: {target}`");
                     Ok(target)
                 } else {
@@ -403,30 +431,24 @@ impl PlaceExpr {
                     _ => unreachable!(),
                 };
                 let p = &mut **p;
-                let wrap = wrappers.is_none();
-                let mut wrappers: &mut Vec<Type> = match wrappers {
-                    Some(wrappers) => wrappers,
-                    None => &mut vec![],
-                };
+                let mut wrappers: Vec<Type> = vec![];
                 loop {
-                    let p_ty = p.compute_ty(Some(&mut wrappers))?;
+                    let p_ty = p.compute_ty()?;
                     if let Some(mut ty) = match field {
                         None => p_ty.get_array_or_slice_element(),
                         Some(ref field) => p_ty.get_field(field).map(|f| f.ty()),
                     } {
                         debug!("field/index found on `{p_ty}` with type `{ty}`");
-                        if wrap {
-                            for wrapper in wrappers.drain(..).rev() {
-                                match wrapper.wrap_type(ty.clone()) {
-                                    Some(new_ty) => {
-                                        debug!("wrapping with `{wrapper}`, result: `{new_ty}`");
-                                        ty = new_ty;
-                                        self.wrap_in_place(wrapper);
-                                    }
-                                    None => {
-                                        debug!("cannot wrap with `{wrapper}`");
-                                        break;
-                                    }
+                        for wrapper in wrappers.drain(..).rev() {
+                            match wrapper.wrap_type(ty.clone()) {
+                                Some(new_ty) => {
+                                    debug!("wrapping with `{wrapper}`, result: `{new_ty}`");
+                                    ty = new_ty;
+                                    self.wrap_in_place(wrapper);
+                                }
+                                None => {
+                                    debug!("cannot wrap with `{wrapper}`");
+                                    break;
                                 }
                             }
                         }
@@ -445,9 +467,13 @@ impl PlaceExpr {
                 }
             }
             Self::Wrap(p, wrapper) => wrapper
-                .wrap_type(p.compute_ty(wrappers)?)
+                .wrap_type(p.compute_ty()?)
                 .ok_or(Error::new(p, "should implement `PlaceWrapper`")),
-        })
+        });
+        if let Ok(ty) = &res {
+            CACHE.lock().unwrap().insert(self.clone(), ty.clone());
+        }
+        res
     }
 }
 
