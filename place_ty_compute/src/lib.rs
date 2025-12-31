@@ -256,17 +256,26 @@ impl Error {
     }
 }
 
+/// A place expression.
+///
+/// A place expression is a recursive data structure. The singular leaf node are local variables
+/// (any local variable is a place expression). For the recursive cases, given a place expression
+/// `p`, we can
+/// - dereference it, written as `*p`,
+/// - access a field, written as `p.field`, where `field` is an identifier,
+/// - index into it, written as `p[expr]`, where `expr` is any expression,
+/// - wrap it with a place wrapper, written as `@%Wrapper p`, where `Wrapper` is a `PlaceWrapper`.
 #[derive(Clone, Ord, PartialOrd, PartialEq, Eq)]
 pub enum PlaceExpr {
+    /// Local variable `v`.
+    LocalVar(Local),
     /// Derefing a place `*p`.
     Deref(Box<PlaceExpr>),
-    /// Accessing a field `p.field`
+    /// Accessing a field `p.field`, `field` can be any identifier.
     FieldAccess(Box<PlaceExpr>, String),
     /// Indexing a place `p[42]`, the index can be an arbitrary expression.
     Index(Box<PlaceExpr>, Expr),
-    /// Local variable `v`.
-    LocalVar(Local),
-    /// Wrapping a place, `@%Wrapper p`
+    /// Wrapping a place, `@%Wrapper p`.
     Wrap(Box<PlaceExpr>, Type),
 }
 
@@ -393,6 +402,44 @@ impl PlaceExpr {
         }
     }
 
+    /// Compute the type of this place expression and desugar it in the process.
+    ///
+    /// This algorithm operates recursively on `self`. Note that it also inserts implicit
+    /// dereference and place wrap operations as well as removes redundant ones (by modifying
+    /// `self` in-place).
+    ///
+    /// Here is an informal explanation of the algorithm: we match on `self` and then proceed as
+    /// follows:
+    /// - When `self == l` where `l` is a local variable, we return the type of `l`.
+    /// - When `self == *p` where `p` is another place expression, we
+    ///   - compute the type of `p`,
+    ///   - assert that `typeof(p)` implements `HasPlace`,
+    ///   - if `p == @%Wrapper q` for a type `Wrapper` and place expression `q`, then:
+    ///     - set `self = q`,
+    ///     - compute the type of `q`,
+    ///     - assert that `<typeof(p) as HasPlace>::Target` is the same as `typeof(q)`.
+    ///   - return the type `<typeof(p) as HasPlace>::Target`.
+    /// - When `self == p.field` or `self == p[i]`, then
+    ///   - compute the type of `p`,
+    ///   - now there are three cases:
+    ///     1. `typeof(p)` has a field named `field` or can be indexed,
+    ///     2. `typeof(p)` implement `HasPlace`,
+    ///     3. None of the two cases above hold.
+    ///
+    ///     We cover them in reverse, since that makes it easier to understand. We also need a list
+    ///     of types which we call `wrappers`. Note that the second case jumps back to the
+    ///     beginning to the type computation of `p`.
+    ///
+    ///   - In the third case, we return an error that `typeof(p)` has no field named `field` or
+    ///     cannot be indexed.
+    ///   - In the second case, we append `typeof(p)` to our list of `wrappers`, then set `p = *p`,
+    ///     and then jump to the beginning to compute the type of `p`.
+    ///   - In the first case, we set `ty` to the type of the field or the element type and then
+    ///     iterate backwards through the `wrapper` list:
+    ///     - as long as the type implements `PlaceWrapper`, we set `self = @%Wrapper self` and
+    ///       set `ty` to the result of wrapping `ty` with `Wrapper`,
+    ///     - when we reach the end of the list or `Wrapper` doesn't implement `PlaceWrapper`, we
+    ///       stop and return `ty`.
     pub fn compute_ty(&mut self) -> Result<Type, Error> {
         static CACHE: Mutex<BTreeMap<PlaceExpr, Type>> = Mutex::new(BTreeMap::new());
         let cache = CACHE.lock().unwrap();
