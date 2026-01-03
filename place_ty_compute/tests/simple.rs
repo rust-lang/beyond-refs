@@ -237,3 +237,24 @@ fn multi_wrapper2() {
         "MaybeUninit<MaybeUninit<MaybeUninit<Z>>>",
     );
 }
+
+#[test]
+fn unexpected_maybe_uninit() {
+    let field = Type::new_generic("Field");
+    let struct_ = Type::new_struct("Struct", vec![Field::new("field", field.clone())]);
+    let ty = maybe_uninit(&shared_ref(&maybe_uninit(&struct_)));
+    let p = Local::new(ty, "p");
+    let mut e = place_expr!(p.field);
+    check(
+        &mut e,
+        // This is intended behavior, but most likely surprising.
+        //
+        // It is not the job of the place expression type computation to check whether the
+        // operation is valid or not. Using this resulting place expression anywhere will not work,
+        // since it includes a deref through a `MaybeUninit`. This is governed by the `PlaceDeref`
+        // trait, which is not implemented for `MaybeUninit`. Thus this will always lead to an
+        // error.
+        "@%MaybeUninit (***p).field",
+        "MaybeUninit<Field>",
+    );
+}
