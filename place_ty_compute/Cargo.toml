@@ -1,0 +1,11 @@
+[package]
+name = "place_ty_compute"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tracing = "0.1.44"
+tracing-tree = "0.4.1"
+
+[dev-dependencies]
+tracing-subscriber = "0.3.2"
