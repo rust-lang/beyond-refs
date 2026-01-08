@@ -1,5 +1,7 @@
 # Marker trait approach
 
+{{#include ../cur.md}}
+
 Coercing a custom user-defined exclusive reference into a user-defined shared
 reference is a slightly involved affair: the two types are obviously going to be
 different types, just like `&mut T` and `&T` are different, but they must also
@@ -32,7 +34,7 @@ struct CustomMarker<'a>(PhantomData<&'a mut ()>);
 struct CustomMarkerRef<'a>(PhantomData<&'a ()>);
 ```
 
-As with [the Reborrow marker trait](./reborrow-marker-trait.md), some
+As with [the Reborrow marker trait](../reborrow/marker-trait.md), some
 limitations are placed on the trait although this time most of them are
 expressed on the trait directly.
 

@@ -29,10 +29,10 @@ fn g(a: CustomMut<'_, u32>) {
 
 ## Use cases
 
-- [User-defined exclusive references](./reborrow-custom-mut.md)
-- [Wrapper types](./reborrow-wrapper-types.md)
-- [Marker types](./reborrow-marker-types.md)
-- [Exclusive reference collections](./reborrow-reference-collections.md)
+- [User-defined exclusive references](./custom-mut.md)
+- [Wrapper types](./wrapper-types.md)
+- [Marker types](./marker-types.md)
+- [Exclusive reference collections](./reference-collections.md)
 
 ## Approaches
 
@@ -40,10 +40,10 @@ The current approach to reborrowing in user-land is based on an explicit method.
 The current work in the Reborrow traits lang experiment is based on a marker
 trait.
 
-- [Marker trait approach](./reborrow-marker-trait.md)
-- [Method-based approach](./reborrow-methods.md)
+- [Marker trait approach](./marker-trait.md)
+- [Method-based approach](./methods.md)
 
-## [CoerceShared](./coerce-shared.md)
+## [CoerceShared](../coerce-shared/index.md)
 
 Exclusive references call for a shared counterpart, into which an exclusive
 reference can be coerced into. For Rust's references, this is `&T`. For
