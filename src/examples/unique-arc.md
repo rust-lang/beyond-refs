@@ -19,11 +19,17 @@ impl<T> UniqueArc<T> {
 }
 ```
 
-It would be nice to be able to borrow its fields somehow. I do not know how to manage the refcounts
-for that to work, plz fix if anyone knows.
+[ACP 700](https://github.com/rust-lang/libs-team/issues/700) proposes a way to field-project
+a `UniqueArc`: first we change how strong counts work. Instead of just a strong count, we cram two
+counters into the `u64`, one for shared refs and one for unique refs, and update the rest of the
+logic accordingly. Can't upgrade a weak pointer if there are any unique refs.
 ```rust
+impl<T> UniqueArc<T> {
+  // Checks the unique-ptr count.
+  pub fn try_into_arc(self) -> Result<Arc<T>, NotUnique> { .. }
+}
+
 /// A subplace of a `UniqueArc`.
-// I have no idea how to manage the reference counts in a way that works.
 pub struct UniqueArcMap<T> {
   /// Pointer to the reference counts.
   header: NonNull<ArcHeader>,
@@ -31,7 +37,18 @@ pub struct UniqueArcMap<T> {
   val: NonNull<T>,
 }
 
-// Intended permissions: read, write, borrow fields as `&`, `&mut`, reborrow fields as `UniqueArcMap`
-// The original `UniqueArc::into_arc` should only be allowed after all the `UniqueArcMap`s have
-// expired.
+// Supports: read, write, borrow fields as `&`, `&mut`, reborrow fields as `UniqueArcMap`
+```
+
+The issue then is:
+- If we don't give `UniqueArcMap` special borrowck behavior, then disjoint borrowing must be done
+  with methods that split the borrow; that's sad.
+- If we do give `UniqueArcMap` special borrowck behavior, then we can prevent multiple
+  `@UniqueArcMap x.field` to the same fields. However, we can't get back a `Arc<T>` anymore:
+```rust
+let x: UniqueArc<Foo> = ...;
+let field = @UniqueArcMap x.field;
+// can't access `x.field` anymore
+// in particular, can't call a method on `x` itself, since that may access `x.field`:
+let arc = x.try_into_arc()?; // ERROR `x.field` is borrowed
 ```
