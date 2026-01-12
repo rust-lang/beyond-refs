@@ -51,7 +51,7 @@ jobs:
         with:
           crate: mdbook-backlinks
           git: https://github.com/Nadrieril/mdbook-backlinks
-          rev: 526e94fd747d712c75baea840d23f513233e0927
+          rev: b2ce2e69219a2065dd9c054154e2a9d5e53a1d95
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
