@@ -1,5 +1,5 @@
-> [!INFO]
+> [!NOTE]
 > This article contains parts of the *current* approach.
 
 <!-- Make linkcheck happy -->
-[!INFO]: http://example.com
+[!NOTE]: http://example.com
