@@ -20,6 +20,8 @@
   - [Autoref](./autoref.md)
 - [In-place initialization](./in-place-init.md)
   - [Init expressions](./init-exprs.md)
+    - [Main proposal](./init-exprs-original.md)
+    - [Addendum](./init-exprs-addendum.md)
   - [Out pointers](./out-pointers.md)
     - [`&uninit T`](./in-place-init/uninit-ref.md)
   - [Placing](./placing.md)
