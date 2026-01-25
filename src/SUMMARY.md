@@ -5,6 +5,7 @@
   - [Projections](./projection-types.md)
   - [HasPlace proposal](./has-place.md)
   - [Field projections](./field-projections.md)
+  - [Place expression desugaring](./place-expression-desugaring.md)
   - [Reborrow](./reborrow/index.md)
     - [User-defined exclusive references](./reborrow/custom-mut.md)
     - [Wrapper types](./reborrow/wrapper-types.md)
