@@ -31,7 +31,7 @@ it. Consider a basic initialisation case:
 ```rust
 struct X(u32, u32);
 
-fn init_x(x: &uninit X) -> Initialised {
+fn init_x(x: &uninit X) -> Initialised<'_> {
     x.0 = 3;
     x.1 = 4;
     x
