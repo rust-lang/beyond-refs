@@ -4,7 +4,7 @@ Out pointers done manually are verbose and quite unergonomic. Making out
 pointers a first class citizen aims to improve this situation. The first step is
 replacing `Uninit<'a, T>` with a custom `&uninit T` reference type.
 
-The `&uninit T` is a reborrowable reference type that is guaranteed to be fully
+The `&uninit T` is a mutable, reborrowable reference type that is guaranteed to be fully
 uninitialised at the start of each function and that the compiler can therefore
 consider as being equivalent to an uninitialised local place:
 
