@@ -51,7 +51,7 @@ Whether to return the pointer or not becomes especially meaningful when fallible
 initialisation is considered:
 
 ```rust
-fn try_init_x(x: &uninit X) -> Result<Initialised, E> {
+fn try_init_x(x: &uninit X) -> Result<Initialised<'_>, E> {
     x.0 = try_get()?;
     x.1 = try_get()?;
     x
