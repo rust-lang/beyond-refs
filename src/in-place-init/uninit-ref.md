@@ -158,7 +158,7 @@ Equivalently to struct field-by-field initialisation, field-by-field `&uninit`
 references and notarisation must be possible.
 
 ```rust
-fn init_struct(s: &uninit Struct) -> Result<Initialised, E> {
+fn init_struct(s: &uninit Struct) -> Result<Initialised<'_>, E> {
     s.base <- init_base(&uninit s.base)?;
     // Note that &s.base and &mut s.base are now legal since we know s.base is initialised.
     s.self_ref <- init_base_self_ref(&uninit s.self_ref, &s.base);
