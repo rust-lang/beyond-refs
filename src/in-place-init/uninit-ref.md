@@ -78,7 +78,7 @@ this point this function holds a valid `X` with full drop responsibility of it.
 Using `try_init_x` inside a function that itself takes `&uninit X` looks like this:
 
 ```rust
-fn init_x(x: &uninit X) -> Initialised {
+fn init_x(x: &uninit X) -> Initialised<'_> {
     // Note: x is reborrowed in `try_init_x(x <== here)`, hence why we can still
     // notarise `x` after the call.
     *x <- try_init_x(x).unwrap();
