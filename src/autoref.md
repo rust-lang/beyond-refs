@@ -19,7 +19,7 @@ fn main() {
 }
 ```
 
-Going beyond references means adding support for autoref to custom types. The [`HasPlace` proposal](./has-place.md) provides a way to borrow places, which we will explicitly use in this section. However, using that specific mechanism for borrowing is not required; autoref can work with other approaches as well.
+Going beyond references means adding support for autoref to custom types. The [`HasPlace` proposal](./virtual-places/index.md) provides a way to borrow places, which we will explicitly use in this section. However, using that specific mechanism for borrowing is not required; autoref can work with other approaches as well.
 
 ## `Receiver::Target` and `HasPlace::Target`
 
@@ -232,7 +232,7 @@ Example::method(&pin mut (@%MaybeUninit (**parent).example));
 ```
 
 > [!NOTE]
-> The place expression `parent.example` is desugared to `@%MaybeUninit (**parent).example`, which has the type `MaybeUninit<Example>`, see [place expression desugaring](./place-expression-desugaring.md). Place expressions are passed to the method resolution algorithm in their desugared form.
+> The place expression `parent.example` is desugared to `@%MaybeUninit (**parent).example`, which has the type `MaybeUninit<Example>`, see [place expression desugaring](./virtual-places/place-expressions.md). Place expressions are passed to the method resolution algorithm in their desugared form.
 
 **Algorithm computation.** Candidates: `[MaybeUninit<Example>, Example]`
 - `MaybeUninit<Example>`

@@ -1,6 +1,6 @@
-# HasPlace proposal
+# Virtual places
 
-{{#include stub.md}}
+{{#include ../stub.md}}
 
 ## Resources
 
