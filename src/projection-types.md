@@ -1,3 +1,0 @@
-# Projections
-
-{{#include stub.md}}

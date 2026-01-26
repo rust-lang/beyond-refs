@@ -10,10 +10,10 @@ reflection, as Rust code can inspect the fields of its own types.
 ## Motivation
 
 The most important application of FRTs is [Field
-Projections](./field-projections.md). There they are one primitive
-way to construct [Projections](./projection-types.md). FRTs can also
-be used by normal functions that need to be generic over fields, but
-do not fit into the field projection framework.
+Projections](./field-projections.md). There they are one primitive way to
+construct [Projections](./virtual-places/place-projections.md). FRTs can also
+be used by normal functions that need to be generic over fields, but do not fit
+into the field projection framework.
 
 ## Naming FRTs
 
