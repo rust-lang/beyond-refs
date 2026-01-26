@@ -31,7 +31,7 @@
     - [Marker trait approach](./coerce-shared/marker-trait.md)
     - [Method-based approach](./coerce-shared/methods.md)
   - [Receiver](./receiver.md)
-  - [Autoref](./autoref.md)
+  - [Autoref and method resolution](./autoref.md)
 - [In-place initialization](./in-place-init.md)
   - [Init expressions](./init-exprs.md)
   - [Out pointers](./out-pointers.md)
