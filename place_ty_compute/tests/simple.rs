@@ -26,7 +26,7 @@ fn check(place: &mut PlaceExpr, desugaring: &str, expected_ty: &str) {
     init_logging();
     let undesugared = format!("{place}");
     let ty = place.compute_ty();
-    println!("analzed the place expression `{undesugared}` with:");
+    println!("analyzed the place expression `{undesugared}` with:");
     for ctx in place.context() {
         println!("\t{ctx}")
     }
