@@ -2,7 +2,6 @@
 
 - [Custom references](./custom-refs.md)
   - [Field representing types](./field-representing-types.md)
-  - [Projections](./projection-types.md)
   - [Field projections](./field-projections.md)
   - [Virtual places](./virtual-places/index.md)
     - [Basic place expressions](./virtual-places/basic-place-expressions.md)
