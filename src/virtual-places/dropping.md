@@ -1,0 +1,3 @@
+# Dropping
+
+{{#include ../stub.md}}
