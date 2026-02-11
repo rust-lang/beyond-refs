@@ -21,6 +21,7 @@
 - [In-place initialization](./in-place-init.md)
   - [Init expressions](./init-exprs.md)
   - [Out pointers](./out-pointers.md)
+    - [`&uninit T`](./in-place-init/uninit-ref.md)
   - [Placing](./placing.md)
   - [Guaranteed value emplacement](./guaranteed-emplacement.md)
 - [Running Examples](./examples.md)
