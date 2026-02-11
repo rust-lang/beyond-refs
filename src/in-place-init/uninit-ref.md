@@ -307,6 +307,19 @@ fn try_init_s(s: &uninit Struct) -> Result<Initialised<'_>, dyn Error> { ... }
 let s = try_init_s(_)?;
 ```
 
+#### Multiple out pointers
+
+```rust
+fn init_field1_and_field2<'a, 'b>(
+    v: u32,
+    field1: &'a uninit Field1,
+    field2: &'b uninit Field2
+) -> (Initialised<'a>, Initialised<'b>) { ... }
+
+let s: Struct;
+init_field1_and_field2(3, &uninit s.field1, &uninit s.field2);
+```
+
 ### Incorrect usage examples
 
 These are examples of incorrect usage that do not compile.
