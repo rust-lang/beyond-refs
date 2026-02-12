@@ -9,5 +9,5 @@ With the Reborrow trait, reborrowing wrapper types of exclusive references
 becomes possible using blanket implementations.
 
 ```rust
-impl<T: Reborrow> for Option<T> { /* ... */ }
+impl<T: Reborrow> Reborrow for Option<T> { /* ... */ }
 ```
