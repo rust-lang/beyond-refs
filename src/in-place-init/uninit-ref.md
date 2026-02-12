@@ -128,6 +128,19 @@ let r: T;
 init_t(&uninit t);
 ```
 
+---
+
+**Justification**
+
+We biased towards denying drops of `Initialised<'_>` other than use for marking place
+initialised because the type is intended for notarisation in the current function call
+frame.
+For more sophisticated post-initialisation manipulation of the initialised data,
+we believe that it is more ergonomic and less error-prone if notarisation happens first
+and the access to the data is handed off to other sub-routines via `&mut` borrows.
+
+---
+
 ## Syntax sugar
 
 Having to write out `&uninit` is a nuisance in most case. Many in-place
@@ -189,6 +202,11 @@ finish its initialisation.
    more verbose than automatic solutions. Syntax sugar helps a lot though.
 
 2. The implementation requires a non-trivial amount of new compiler features.
+   - The characterisation of `Initialised<'_>` is that every instance must be
+     discharged eventually, implying that the borrow-checker must also check
+     for this at each return point.
+   - In some cases, it will require compiler to perform optimisation to
+     eliminate panicking.
 
 3. `&uninit T` does not itself provide a direct path to solving eg. in-place
    `Box` or `Rc` initialisation. The most direct solution of adding new APIs
@@ -197,11 +215,126 @@ finish its initialisation.
    return type of the new APIs, and the new APIs will need various variants to
    match status quo, leading to API bloat.
 
+---
+
+**NOTE**
+
+On the note of enforcing no-drop of `Initialised<'_>`, the back-up proposal,
+if this property would be found objectionable, is to weaken this requirement and
+adopt a type that still carries a lifetime with invariance as well as the same
+drop implementation of the emplaced type `T`.
+This is also known as `&'_ init T` or `&'_ own T` type, because the model will
+require the type to contain the pointer to the place under emplacement in order
+for dropping to take place.
+
+---
+
 ## Examples
+
+### Prospective library extension
+
+Out-pointers do not themselves solve the question how smart pointers like `Box`
+would perform in-place initialisation.
+However, with sensible library design we believe that out-pointers can provide
+better ergonomics when it comes to balancing between convenience, safety, and
+flexibility.
+
+```rust
+impl<'a, T, A> BoxBuilder<'a, T, A> {
+    pub fn new_init(alloc: A) -> (&'a uninit T, Self) {
+        let ptr = if T::IS_ZST {
+            NonNull::dangling()
+        } else {
+            let layout = Layout::new::<mem::MaybeUninit<T>>();
+            alloc.allocate(layout).unwrap().cast()
+        };
+        (ptr as &'a uninit _, Self { ptr, alloc })
+    }
+
+    /// An example for fallible allocation, take 2.
+    pub fn new_try_init(alloc: A) -> Result<(&'a uninit T, Self), AllocError> {
+        let ptr = if T::IS_ZST {
+            NonNull::dangling()
+        } else {
+            let layout = Layout::new::<mem::MaybeUninit<T>>();
+            alloc.allocate(layout)?.cast()
+        };
+        Ok((ptr as &'a uninit _, Self { ptr, alloc }))
+    }
+
+    /// An example for fallible allocation.
+    pub fn new_opt_init(alloc: A) -> Option<(&'a uninit T, Self)> {
+        let ptr = if T::IS_ZST {
+            NonNull::dangling()
+        } else {
+            let layout = Layout::new::<mem::MaybeUninit<T>>();
+            alloc.allocate(layout).ok()?.cast()
+        };
+        Some((ptr as &'a uninit _, Self { ptr, alloc }))
+    }
+
+    pub fn finalise(self, initialize: Initialized<'a>) -> Box<T, A> {
+        unsafe {
+            // Safety: discharge initialize because we are going to set
+            // the Unique as initialized
+            initialize.discharge();
+            // Safety: we make a switch on the init state now.
+            Box::from_raw_in(self.ptr, self.alloc)
+        }
+    }
+}
+
+struct Struct {
+    data1: [u8; 32],
+    data2: [u8; 32],
+}
+
+let (uninit_struct, builder) = BoxBuilder::<'_, Struct>::new_init(Global);
+uninit_struct.data1 <- [0; 32];
+uninit_struct.data2 <- [4; 32];
+let box_struct = builder.finalise(uninit_struct);
+
+/// With this, convenient and opinionated Box emplacing constructors can be
+/// built.
+impl<T, A> Box<T, A> {
+    pub fn new_init(
+        alloc: A,
+        ctor: impl for<'a> FnOnce(&'a uninit T) -> Initialised<'a>,
+    ) -> Self
+    {
+        let (uninit_struct, builder) = BoxBuilder::<'_, T>::new_init(alloc);
+        let initialize = ctor(&uninit_struct);
+        builder.finalise(initialize)
+    }
+
+    pub fn new_opt_init(
+        alloc: A,
+        ctor: impl for<'a> FnOnce(&'a uninit T) -> Option<Initialised<'a>>,
+    ) -> Option<Self>
+    {
+        let (uninit_struct, builder) = BoxBuilder::<'_, T>::new_opt_init(alloc)?;
+        ctor(&uninit_struct).map(|initialize| {
+            builder.finalise(initialize)
+        })
+    }
+
+    pub fn new_try_init<F, E>(
+        alloc: A,
+        ctor: F,
+    ) -> Result<Self, E>
+    where
+        F: for<'a> FnOnce(&'a uninit T) -> Result<Initialised<'a>, E>,
+        E: 'static + From<AllocError>,
+    {
+        let (uninit_struct, builder) = BoxBuilder::<'_, T>::new_try_init(alloc)?;
+        Ok(builder.finalise(ctor(&uninit_struct)?))
+    }
+}
+```
 
 ### Correct usage
 
-These are examples of correct, unproblematic usage.
+These are examples of correct and recommended usage.
 
 #### One-shot initialisation
 
@@ -322,7 +455,7 @@ init_field1_and_field2(3, &uninit s.field1, &uninit s.field2);
 
 ### Incorrect usage examples
 
-These are examples of incorrect usage that do not compile.
+These are examples of incorrect usage that must not compile.
 
 #### Reference to partially initialised struct
 
@@ -415,4 +548,4 @@ s.field2 = init_b(_);
 
 ## API sketch
 
-* [Rust playground link](https://play.rust-lang.org/?version=nightly&mode=debug&edition=2024&gist=71fc6309242bcb601ec150d7461413c1)
+- [Rust playground link](https://play.rust-lang.org/?version=nightly&mode=debug&edition=2024&gist=71fc6309242bcb601ec150d7461413c1)
