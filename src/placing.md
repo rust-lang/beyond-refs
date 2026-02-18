@@ -1,7 +1,7 @@
 # Placing functions
 
 This proposal provides an alternative syntax support for emplacement.
-A new attribute `#[placing]` is introduced on the ADT type and function declaration site to signal
+A new attribute `#[placing]` (placeholder notation) is introduced on the ADT type and function declaration site to signal
 to the compiler that the type, function or closure is involved in emplacement and the appropriate
 transformation is applied to support emplacement.
 
