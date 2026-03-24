@@ -30,3 +30,4 @@
   - [ArcBox](./examples/arcbox.md)
   - [UniqueArc](./examples/unique-arc.md)
   - [SharedMutableRef](./examples/shared-mutable-ref.md)
+  - [Exotic Field Projections](./examples/exotic-field-projections.md)
