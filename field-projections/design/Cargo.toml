@@ -1,0 +1,10 @@
+[package]
+name = "design"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macros.workspace = true
+
+[dev-dependencies]
+pin-project = "1.1.13"

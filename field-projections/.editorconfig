@@ -1,0 +1,6 @@
+root = true
+
+[{*.{rs,toml,md,gitignore,yml,html,editorconfig},justfile}]
+charset = utf-8
+end_of_line = lf
+max_line_length = 80

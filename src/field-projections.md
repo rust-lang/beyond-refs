@@ -11,3 +11,5 @@
 [Design meeting 2025-08-13: Field projections - HackMD](https://hackmd.io/PgVxFwBDQlGXPGTQrI0i3A?view), Aug 2025
 
 [pre-RFC Field Projections v3 - HackMD](https://hackmd.io/@BennoLossin/HkMBy6Hzlx), May 2025 or earlier
+
+[Field Projection Designs & Rustdoc (rendered)](/beyond-refs/field-projections/index.html)

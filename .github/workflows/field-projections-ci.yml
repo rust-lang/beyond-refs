@@ -1,0 +1,49 @@
+name: Field Projections CI
+
+on:
+  push:
+    paths:
+      - 'field-projections/**'
+      - '.github/workflows/field-projections-ci.yml'
+  pull_request:
+    paths:
+      - 'field-projections/**'
+      - '.github/workflows/field-projections-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly-2026-08-13
+          components: rustfmt
+      - name: Format check
+        run: cargo fmt --check --all
+        working-directory: field-projections
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly-2026-08-13
+          components: rustfmt, miri
+      - name: Run tests
+        run: just test
+        working-directory: field-projections
+        env:
+          RUSTFLAGS: "-Dwarnings"
+      - name: Run miri
+        run: just miri
+        working-directory: field-projections
+        env:
+          RUSTFLAGS: "-Dwarnings"

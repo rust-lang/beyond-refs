@@ -1,0 +1,9 @@
+[build]
+rustdocflags = [
+  "-Z",
+  "unstable-options",
+
+  "--generate-link-to-definition",
+  "--generate-macro-expansion",
+  "--sort-modules-by-appearance",
+]

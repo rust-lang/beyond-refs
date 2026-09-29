@@ -19,6 +19,7 @@ level = 0
 [output.linkcheck]
 # This might be too annoying.
 warning-policy = "error"
+exclude = ["field-projections.*"]
 
 [preprocessor.backlinks] # https://github.com/Nadrieril/mdbook-backlinks
 optional = true

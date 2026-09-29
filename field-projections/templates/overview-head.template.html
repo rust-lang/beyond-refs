@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Projection Designs</title>
+    <style>
+        /* Rustdoc-inspired theme */
+        :root {
+            --bg-color: #f5f5f5;
+            --content-bg: #ffffff;
+            --text-color: #333333;
+            --header-color: #000000;
+            --link-color: #3873ad;
+            --link-hover-color: #000000;
+            --border-color: #e0e0e0;
+            --code-font: "Fira Mono", Source Code Pro, DejaVu Sans Mono, monospace;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #353535;
+                --content-bg: #2A2A2A;
+                --text-color: #dddddd;
+                --header-color: #ffffff;
+                --link-color: #d2991d;
+                --link-hover-color: #ffffff;
+                --border-color: #4d4d4d;
+            }
+        }
+
+        body {
+            font-family: "Source Serif Pro", Georgia, serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        h1, h2, h3 {
+            font-family: "Fira Sans", Arial, NanumBarunGothic, sans-serif;
+            color: var(--header-color);
+            font-weight: 500;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        h3 {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        p {
+            font-size: 1.05rem;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0 1.5em;
+            margin: 15px 0;
+        }
+
+        li {
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-family: var(--code-font);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+
+        li.current-design {
+            border-left: 4px solid #4d76a3;
+        }
+
+        li.legacy-design {
+            border-left: 4px solid #888888;
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: var(--link-hover-color);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-right: 12px;
+            font-weight: bold;
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .current-design .badge {
+            background-color: #2e5c8a;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Field Projection Designs</h1>
+    <h2>Overview</h2>
+
+    <p>This is a collection of approaches to designing the field projection
+    feature for Rust. This collection aims to provide quick comparisons between
+    the approaches and the ability to write desugared examples that work in
+    Rust today.</p>
+
+    <p>The design of these approaches is incredibly dynamic, lots of small
+    changes accumulate over time, making it difficult to judge when the current
+    approach has changed to a new one. For this reason, and to avoid calling
+    every tiny change a "new approach", we chose to only call substantial,
+    design philosophy changes a <i>new approach.</i></p>
+
+    <p>Links to types, files or other elements in on this website are sadly not
+    intended to be permanent. Instead it's trying to be a dynamically changing
+    repository showing the state of the most up-to-date idea.</p>
+
+    <h2>Designs</h2>
+    <ul>
+    <li class="current-design">
+        <span class="badge">active</span>
+        <a href="current/design/index.html">02-handles</a>
+    </li>

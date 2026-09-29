@@ -1,13 +1,10 @@
-# Sample workflow for building and deploying a mdBook site to GitHub Pages
-#
-# To get started with mdBook see: https://rust-lang.github.io/mdBook/index.html
-#
-name: Deploy mdBook site to Pages
+# Workflow for building and deploying mdBook site and field-projections to GitHub Pages
+name: Deploy Pages
 
 # Runs on pushes and PRs targeting the default branch
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "trial/field-projections"]
 
   pull_request:
     branches: ["main"]
@@ -57,6 +54,21 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Build with mdBook
         run: mdbook build
+      - name: Setup Just
+        uses: extractions/setup-just@v4
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly-2026-08-13
+          components: rustfmt
+      - name: Build field-projections documentation
+        run: |
+          cd field-projections
+          just pages
+      - name: Integrate field-projections pages into book
+        run: |
+          mkdir -p book/html/field-projections
+          cp -r field-projections/target/pages/* book/html/field-projections/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -64,7 +76,7 @@ jobs:
 
   # Deployment job
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
