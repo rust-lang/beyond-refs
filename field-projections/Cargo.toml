@@ -8,6 +8,7 @@ members = [
   "examples/struct_of_arrays",
   "examples/simple",
   "examples/file_slice",
+  "examples/custom_layout",
 ]
 
 [workspace.dependencies]
