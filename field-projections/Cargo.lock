@@ -10,6 +10,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "E-custom-layout"
+version = "0.1.0"
+dependencies = [
+ "design",
+]
+
+[[package]]
 name = "E-file_slice"
 version = "0.1.0"
 dependencies = [
