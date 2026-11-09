@@ -11,6 +11,8 @@ on:
       - '.github/workflows/field-projections-ci.yml'
   workflow_dispatch:
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
