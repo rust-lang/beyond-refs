@@ -37,14 +37,14 @@ jobs:
         with:
           tool: mdbook@0.5.2
       - name: Install mdbook-linkcheck
-        uses: baptiste0928/cargo-install@v3
+        uses: baptiste0928/cargo-install@8195d4f734a149db85385bb4102b42efcd373759 # v3.5.0
         # Temporarily pull the fix for https://github.com/Michael-F-Bryan/mdbook-linkcheck/pull/98
         with:
           crate: mdbook-linkcheck
           git: https://github.com/schilkp/mdbook-linkcheck
           rev: ed981be6ded11562e604fff290ae4c08f1c419c5
       - name: Install mdbook-backlinks
-        uses: baptiste0928/cargo-install@v3
+        uses: baptiste0928/cargo-install@8195d4f734a149db85385bb4102b42efcd373759 # v3.5.0
         with:
           crate: mdbook-backlinks
           git: https://github.com/Nadrieril/mdbook-backlinks
