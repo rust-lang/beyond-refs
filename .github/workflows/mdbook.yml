@@ -51,7 +51,7 @@ jobs:
           rev: b2ce2e69219a2065dd9c054154e2a9d5e53a1d95
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Build with mdBook
         run: mdbook build
       - name: Setup Just
