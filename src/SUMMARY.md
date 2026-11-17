@@ -4,7 +4,7 @@
   - [Field representing types](./field-representing-types.md)
   - [Projections](./projection-types.md)
   - [HasPlace proposal](./has-place.md)
-  - [Field projections](./field-projections.md)
+  - [Field projections](./field-projections/index.md)
   - [Place expression desugaring](./place-expression-desugaring.md)
   - [Reborrow](./reborrow/index.md)
     - [User-defined exclusive references](./reborrow/custom-mut.md)
