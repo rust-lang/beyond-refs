@@ -1,6 +1,13 @@
+<!--
+This file is never shown on the deployed site: the Pages workflow overwrites
+book/html/field-projections/index.html with field-projections/target/pages/.
+It exists only so SUMMARY.md can link to ./field-projections/index.md without
+creating a separate book/html/field-projections.html page.
+-->
+
 # Field projections
 
-{{#include stub.md}}
+{{#include ../stub.md}}
 
 ## Resources
 
